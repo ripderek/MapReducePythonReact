@@ -25,30 +25,20 @@ export default function Aplicacion() {
       <Navbar_app titulo={"Aplicacion Distribuida"} />
       {verCrear && <Crear Cerrar={CerrarCrear} />}
       <Card className="h-full w-full">
-        <CardHeader floated={false} shadow={false} className="rounded-none">
-          <div className="mb-8 flex items-center justify-between gap-8">
+
+        <CardBody className="overflow-scroll px-0 p-5">
+          <div className="mb-2 flex items-center justify-between gap-8">
             <div>
               <Typography variant="h5" color="blue-gray">
-                Arquitectura Distribuida
+                Aplicaciones Distribuidas
               </Typography>
               <Typography color="gray" className="mt-1 font-normal">
                 Pyhton & React
               </Typography>
             </div>
             <div className="flex shrink-0 flex-col gap-2 sm:flex-row">
-              {/*
-            <Button variant="outlined" size="sm">
-              view all
-            </Button>
-             */}
-              {/* <Button className="flex items-center gap-3" size="sm" onClick={() => setVerCrear(true)}>
-                <PlusCircleIcon strokeWidth={2} className="h-4 w-4" /> Subir Documento
-              </Button>*/}
             </div>
           </div>
-
-        </CardHeader>
-        <CardBody className="overflow-scroll px-0 p-5">
           <Lista />
 
         </CardBody>

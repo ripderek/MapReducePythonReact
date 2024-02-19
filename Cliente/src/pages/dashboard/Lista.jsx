@@ -5,6 +5,7 @@ import {
   TrashIcon,
   EyeIcon,
   PlusCircleIcon,
+  BoltIcon,
 } from "@heroicons/react/24/solid";
 import {
   Typography,
@@ -17,29 +18,17 @@ import {
 } from "@material-tailwind/react";
 import { MagnifyingGlassIcon } from "@heroicons/react/24/outline";
 
-const TABLE_HEAD = [
-  "",
-  "id_persona",
-  "nombres",
-  "apellidos",
-  "correo",
-  "direccion",
-  "editar",
-  "eliminar",
-];
+const TABLE_HEAD = ["", "Archivo Log", "Eliminar"];
 import { Loader } from "@/widgets";
 import axios from "axios";
 
-import { Editar } from "@/pages/dashboard";
-import Cookies from "universal-cookie";
-import { VisorPDF } from "@/pages/dashboard";
+import { Editar, Crear, Ejecutar } from "@/pages/dashboard";
+
 export default function Lista() {
   const [Loading, setLoading] = useState(false);
 
   //stado para ver el fomulario de crear persona
   const [verEditar, setVerEditar] = useState(false);
-  const [idEditar, setIdEditar] = useState(false);
-  const cookies = new Cookies();
 
   const CerrarEditar = () => {
     setVerEditar(false);
@@ -62,7 +51,7 @@ export default function Lista() {
       //alert("Buscando");
       const response = await axios.post("http://localhost:4000", {
         jsonrpc: "2.0",
-        method: "obtener_datos",
+        method: "listar_archivos_log",
         id: 1,
       });
       const resultados = await JSON.parse(response.data.result);
@@ -84,124 +73,145 @@ export default function Lista() {
     direccion: "",
   });
 
+  //funcion para buscar y obtener el contenido deun log
+  const [contenidoLog, setCOntenidoLog] = useState([]);
+  const ObtenerContenido = async (nombreLog) => {
+    //alert(id_pregunta + " " + buscar + " " + id_nivel);
+    setLoading(true);
+
+    try {
+      //alert("Buscando");
+      const response = await axios.post("http://localhost:4000", {
+        jsonrpc: "2.0",
+        method: "leer_archivo_log",
+        params: [nombreLog],
+        id: 1,
+      });
+      const resultados = await JSON.parse(response.data.result);
+
+      setCOntenidoLog(resultados);
+      console.log(resultados);
+      setLoading(false);
+    } catch (error) {
+      setLoading(false);
+      alert("Error");
+      console.log(error);
+    }
+  };
+  //funcion para eliminar un archivo log skere modo diablo
+  const EliminarArchivo = async (nombreLog) => {
+    //alert(id_pregunta + " " + buscar + " " + id_nivel);
+    setLoading(true);
+
+    try {
+      //alert("Buscando");
+      const response = await axios.post("http://localhost:4000", {
+        jsonrpc: "2.0",
+        method: "eliminar_archivo_log",
+        params: [nombreLog],
+        id: 1,
+      });
+      //const resultados = await JSON.parse(response.data.result);
+      ObtenerListaDocumentos();
+      //setCOntenidoLog(resultados);
+      //console.log(resultados);
+      setLoading(false);
+    } catch (error) {
+      setLoading(false);
+      alert("Error");
+      console.log(error);
+    }
+  };
+  //constante para abrir el dialogo de ejecutar el mapreducer
+  const [openEjectuar, setOpenEjecutar] = useState(false);
+  const CerrarEjecutar = () => {
+    setOpenEjecutar(false);
+  };
   return (
     <>
+      {openEjectuar && <Ejecutar cerrar={CerrarEjecutar} />}
       {Loading && <Loader />}
-      {verEditar && <Editar Cerrar={CerrarEditar} PerDatos={persona} />}
-      {Lista.length === 0 ? (
-        <Typography
-          variant="h2"
-          color="blue-gray"
-          className="font-normal leading-none opacity-70 mx-auto"
-        >
-          No tiene documentos guardados
-        </Typography>
-      ) : (
-        <>
-          <Button className="flex items-center gap-3 mb-4" size="sm">
-            <PlusCircleIcon strokeWidth={2} className="h-4 w-4" /> Agregar
-            persona
-          </Button>
-          <div className="flex flex-col items-center justify-between gap-4 md:flex-row">
-            <Input
-              label="Buscar"
-              icon={<MagnifyingGlassIcon className="h-5 w-5" />}
-            />
-          </div>
+      {verEditar && <Editar Cerrar={CerrarEditar} />}
 
-          <table className="mt-4 w-full min-w-max table-auto text-left">
-            <thead>
-              <tr>
-                {TABLE_HEAD.map((head) => (
-                  <th
-                    key={head}
-                    className="border-y border-blue-gray-100 bg-blue-gray-50/50 p-4"
-                  >
-                    <Typography
-                      variant="small"
-                      color="blue-gray"
-                      className="font-normal leading-none opacity-70"
+      <>
+        <div className="flex ">
+          <Button
+            className="flex items-center gap-3 rounded-none "
+            size="sm"
+            color="indigo"
+            variant="gradient"
+            onClick={() => setVerEditar(true)}
+          >
+            <PlusCircleIcon strokeWidth={2} className="h-4 w-4" /> Crear Log
+          </Button>
+          <Button
+            className="flex items-center gap-3  ml-3 rounded-none"
+            size="sm"
+            variant="gradient"
+            onClick={() => setOpenEjecutar(true)}
+          >
+            <BoltIcon strokeWidth={2} className="h-4 w-4" /> Ejecutar MapReduce
+          </Button>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2  p-5  ">
+          <div className="mx-auto h-96 overflow-y-auto">
+            <table className="mt-4 w-96 min-w-max table-auto text-left ">
+              <thead>
+                <tr>
+                  {TABLE_HEAD.map((head) => (
+                    <th
+                      key={head}
+                      className="border-y border-blue-gray-100 bg-blue-gray-50/50 p-4"
                     >
-                      {head}
-                    </Typography>
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {Lista.map((row, index) => (
-                <tr key={index}>
-                  <td className={classes}>
-                    <div className="flex items-center gap-3">
+                      <Typography
+                        variant="small"
+                        color="blue-gray"
+                        className="font-normal leading-none opacity-70"
+                      >
+                        {head}
+                      </Typography>
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {Lista.map((row, index) => (
+                  <tr
+                    key={index}
+                    className="hover:bg-blue-gray-100  cursor-pointer"
+                  >
+                    <td className={classes}>
+                      <div className="flex items-center gap-3">
+                        <div className="flex flex-col">
+                          <Typography
+                            variant="small"
+                            color="blue-gray"
+                            className="font-normal"
+                          >
+                            {index + 1}
+                          </Typography>
+                        </div>
+                      </div>
+                    </td>
+                    <td
+                      className={classes}
+                      onClick={() => ObtenerContenido(row)}
+                    >
                       <div className="flex flex-col">
                         <Typography
                           variant="small"
                           color="blue-gray"
                           className="font-normal"
                         >
-                          {index + 1}
+                          {row}
                         </Typography>
                       </div>
-                    </div>
-                  </td>
-                  <td className={classes}>
-                    <div className="flex flex-col">
-                      <Typography
-                        variant="small"
-                        color="blue-gray"
-                        className="font-normal"
-                      >
-                        {row[0]}
-                      </Typography>
-                    </div>
-                  </td>
-                  <td className={classes}>
-                    <div className="flex flex-col">
-                      <Typography
-                        variant="small"
-                        color="blue-gray"
-                        className="font-normal"
-                      >
-                        {row[1]}
-                      </Typography>
-                    </div>
-                  </td>
-                  <td className={classes}>
-                    <div className="flex flex-col">
-                      <Typography
-                        variant="small"
-                        color="blue-gray"
-                        className="font-normal"
-                      >
-                        {row[2]}
-                      </Typography>
-                    </div>
-                  </td>
-                  <td className={classes}>
-                    <div className="flex flex-col">
-                      <Typography
-                        variant="small"
-                        color="blue-gray"
-                        className="font-normal"
-                      >
-                        {row[3]}
-                      </Typography>
-                    </div>
-                  </td>
-                  <td className={classes}>
-                    <div className="flex flex-col">
-                      <Typography
-                        variant="small"
-                        color="blue-gray"
-                        className="font-normal"
-                      >
-                        {row[4]}
-                      </Typography>
-                    </div>
-                  </td>
+                    </td>
+                    {/* 
                   <td className={classes}>
                     <div className="w-max">
-                      <Tooltip content="Firmar documento">
+                      <Tooltip content="Ver contenido">
                         <IconButton
                           variant="text"
                           onClick={() => (
@@ -216,25 +226,68 @@ export default function Lista() {
                             setVerEditar(true)
                           )}
                         >
-                          <PencilIcon className="h-4 w-4" />
+                          <EyeIcon className="h-4 w-4" />
                         </IconButton>
                       </Tooltip>
                     </div>
                   </td>
+*/}
+                    <td className={classes}>
+                      <Tooltip content="Eliminar documento">
+                        <IconButton
+                          variant="text"
+                          onClick={() => EliminarArchivo(row)}
+                        >
+                          <TrashIcon className="h-4 w-4" />
+                        </IconButton>
+                      </Tooltip>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          <div className="">
+            {/* AQUI VA LA TABLA CON EL CONTENIDO DE LOS LOGS SKERE MOD DIABLO */}
 
-                  <td className={classes}>
-                    <Tooltip content="Eliminar documento">
-                      <IconButton variant="text">
-                        <TrashIcon className="h-4 w-4" />
-                      </IconButton>
-                    </Tooltip>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </>
-      )}
+            <Typography variant="h5" color="black">
+              Contenido del .log
+            </Typography>
+            <div className="overflow-y-auto h-96 border-2 border-black bg-blue-gray-50">
+              <tbody>
+                {contenidoLog.map(({ ID, tipo }, index) => (
+                  <tr key={index} className="">
+                    <td className="p-1 border-r border-blue-gray-700">
+                      <div className="flex items-center gap-3">
+                        <div className="flex flex-col">
+                          <Typography
+                            variant="small"
+                            color="indigo"
+                            className="font-bold"
+                          >
+                            {ID}
+                          </Typography>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="p-1 ">
+                      <div className="flex flex-col">
+                        <Typography
+                          variant="small"
+                          color="blue-gray"
+                          className="font-normal"
+                        >
+                          {tipo}
+                        </Typography>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </div>
+          </div>
+        </div>
+      </>
     </>
   );
 }

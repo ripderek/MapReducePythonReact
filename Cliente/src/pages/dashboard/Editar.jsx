@@ -16,30 +16,20 @@ import axios from "axios";
 import { Loader } from "@/widgets";
 export default function Editar({ Cerrar, PerDatos }) {
   const [Loading, setLoading] = useState(false);
+  const [numeor, setNumero] = useState(0);
   const HandleSUbumit = async (e) => {
     try {
       setLoading(true);
-
-      //alert("Buscando");
-      /*
-       id_persona: "",
-    nombres: "",
-    apellidos: "",
-    correo: "",
-    direccion: "",
-       */
+      //console.log(DataEdit);
+      //console.log(DataEdit);
+      // alert(numeor);
       const response = await axios.post("http://localhost:4000", {
         jsonrpc: "2.0",
-        method: "actualizar_persona",
-        params: [
-          DataEdit.id_persona,
-          DataEdit.nombres,
-          DataEdit.apellidos,
-          DataEdit.correo,
-          DataEdit.direccion,
-        ],
+        method: "generar_logs",
+        params: [DataEdit.archivo, numeor],
         id: 1,
       });
+
       console.log(response);
       setLoading(false);
       Cerrar();
@@ -50,11 +40,6 @@ export default function Editar({ Cerrar, PerDatos }) {
     }
   };
   const [DataEdit, setDatEdit] = useState([]);
-  useEffect(() => {
-    setDatEdit(PerDatos);
-    //else buscar_por_id
-    //enviar al  servidor para que lo actualice
-  }, []);
   return (
     <>
       <Dialog size="xs" open={true} className="bg-transparent shadow-none">
@@ -62,47 +47,25 @@ export default function Editar({ Cerrar, PerDatos }) {
         <Card className="mx-auto w-full max-w-[24rem]">
           <CardBody className="flex flex-col gap-4">
             <Typography variant="h4" color="blue-gray">
-              Editar
+              Crear .log
             </Typography>
             {/**INPUTS A LLENAR */}
             <Input
-              label="Nombres"
+              label="Archvio"
               type="text"
-              value={DataEdit.nombres}
+              value={DataEdit.archivo}
               size="lg"
               onChange={(e) =>
-                setDatEdit({ ...DataEdit, nombres: e.target.value })
+                setDatEdit({ ...DataEdit, archivo: e.target.value })
               }
               //onChange={(e) => setDescripcion(e.target.value)}
             />
             <Input
-              label="Apellidos"
-              type="text"
+              label="Numero de lineas"
+              type="number"
               size="lg"
-              value={DataEdit.apellidos}
-              onChange={(e) =>
-                setDatEdit({ ...DataEdit, apellidos: e.target.value })
-              }
-              //onChange={(e) => setDescripcion(e.target.value)}
-            />
-            <Input
-              label="Correo"
-              type="text"
-              size="lg"
-              value={DataEdit.correo}
-              onChange={(e) =>
-                setDatEdit({ ...DataEdit, correo: e.target.value })
-              }
-              //onChange={(e) => setDescripcion(e.target.value)}
-            />
-            <Input
-              label="Direccion"
-              type="text"
-              size="lg"
-              value={DataEdit.direccion}
-              onChange={(e) =>
-                setDatEdit({ ...DataEdit, direccion: e.target.value })
-              }
+              value={DataEdit.numero}
+              onChange={(e) => setNumero(e.target.value)}
               //onChange={(e) => setDescripcion(e.target.value)}
             />
           </CardBody>
@@ -113,7 +76,7 @@ export default function Editar({ Cerrar, PerDatos }) {
               color="green"
               onClick={HandleSUbumit}
             >
-              Editar
+              Crear
             </Button>
             <Button
               variant="gradient"

@@ -4,5 +4,6 @@ export { default as Menu } from "@/pages/dashboard/Menu";
 export { default as Lista } from "@/pages/dashboard/Lista";
 export { default as Editar } from "@/pages/dashboard/Editar";
 export { default as VisorPDF } from "@/pages/dashboard/VisorPDF";
+export { default as Ejecutar } from "@/pages/dashboard/Ejecutar";
 
-//VisorPDF
+//Ejecutar

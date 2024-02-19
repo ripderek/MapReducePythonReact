@@ -4,11 +4,14 @@ from werkzeug.wrappers import Request, Response
 import json
 from flask import Flask
 from flask_cors import CORS
-
+#nuevos imports para MapReduce
+from multiprocessing import Pool
+from collections import defaultdict
+import os
+import glob
+import random
 app = Flask(__name__)
 CORS(app)
-
-
 
 
 db_connection = psycopg2.connect(
@@ -112,6 +115,91 @@ def mi_metodo_remoto():
 @dispatcher.add_method
 def otro_metodo():
     return "Skere modo diablo!"
+
+
+
+
+#para el MapReducer 
+def read_logs(file_path):
+    with open(file_path, 'r') as file:
+        return file.readlines()
+
+def mapper(log_lines):
+    event_counts = defaultdict(int)
+    for line in log_lines:
+        parts = line.strip().split(',')
+        event_type = parts[1]  # El tipo de evento esta en la segunda columna
+        event_counts[event_type] += 1
+    return list(event_counts.items())
+
+def reducer(item):
+    event_type, counts = item
+    return (event_type, sum(counts))
+
+#funcion principal para el MapReducer 
+log_dir = "C:\\Users\\casti\\OneDrive\\Escritorio\\Example_Map_reducer\\RPCPY"
+@dispatcher.add_method
+def MapReducer():
+    # C:\Users\casti\OneDrive\Escritorio\Example_Map_reducer\RPCPY
+    file_paths = glob.glob(os.path.join(log_dir, "*.log"))
+    pool = Pool(processes=4)  # Con esto se puede ajustar el numero de procesos
+    logs = pool.map(read_logs, file_paths)
+    mapped = pool.map(mapper, logs)
+    reduced = defaultdict(list)
+    for item_list in mapped:
+        for event_type, count in item_list:
+            reduced[event_type].append(count)
+    result = dict(pool.map(reducer, reduced.items()))
+    print(result)
+
+    # Convertir los resultados a un formato JSON específico
+    resultados_json = json.dumps([f"{key}: {value}" for key, value in result.items()])
+    return resultados_json
+
+
+
+#Funcion para crear los archivos .log de manera aleatoria enviadole un nombre 
+@dispatcher.add_method
+def generar_logs(nombre_archivo, cantidad_lineas):
+    cantidad_lineas = int(cantidad_lineas)  # Convertir a entero
+    print(nombre_archivo + ":" + str(cantidad_lineas))
+    #tipos de eventos para los archivos .log
+    event_types = ['login', 'logout', 'click','error','complete']
+    with open(nombre_archivo+".log", 'w') as file:
+        for i in range(1, cantidad_lineas + 1):
+            event_type = random.choice(event_types)
+            file.write(f"{i},{event_type}\n")
+
+#funcion para listar los archivos .log
+@dispatcher.add_method
+def listar_archivos_log():
+    archivos_log = [archivo for archivo in os.listdir(log_dir) if archivo.endswith(".log")]
+    resultados_json = json.dumps(archivos_log)
+    return resultados_json
+
+#funcion para ver el contenido de un archivo .log 
+@dispatcher.add_method
+def leer_archivo_log(nombre_archivo):
+    eventos = []
+    with open(nombre_archivo, 'r') as file:
+        for linea in file:
+            partes = linea.strip().split(',')
+            eventos.append({"ID": int(partes[0]), "tipo": partes[1]})
+    resultados_json = json.dumps(eventos)
+    return resultados_json
+
+#funcion para eliminar un archivo log 
+@dispatcher.add_method
+
+def eliminar_archivo_log(nombre_archivo):
+    if nombre_archivo.endswith('.log'):
+        try:
+            os.remove(nombre_archivo)
+            print(f"El archivo {nombre_archivo} ha sido eliminado correctamente.")
+        except OSError as e:
+            print(f"No se pudo eliminar el archivo {nombre_archivo}: {e}")
+    else:
+        print("El archivo no es un archivo .log válido.")
 
 
 #if __name__ == "__main__":
